@@ -10,10 +10,10 @@
 #        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 #        copies of the Software, and to permit persons to whom the Software is
 #        furnished to do so, subject to the following conditions:
-#       
+#
 #        The above copyright notice and this permission notice shall be included in all
 #        copies or substantial portions of the Software.
-#       
+#
 #        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 #        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,7 +21,7 @@
 #        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #        SOFTWARE.
-#       
+#
 #        https://airthings.com
 #
 #
@@ -29,8 +29,11 @@ import yaml
 import paho.mqtt.client as mqtt
 from bluepy.btle import UUID, Peripheral
 from datetime import datetime
+import sys
 import time
 import struct
+import re
+import ssl
 
 
 class Sensor:
@@ -80,6 +83,13 @@ class AirthingsWave_mqtt:
         self.mqtt_conf = conf["mqtt"]
         if self.mqtt_conf["username"]:
             self.mqtt_client.username_pw_set(self.mqtt_conf["username"], self.mqtt_conf["password"])
+
+        if "tls" in conf["mqtt"]:
+            self.mqtt_tls_conf=self.mqtt_conf["tls"]
+            self.mqtt_client.tls_set(ca_certs=self.mqtt_tls_conf["ca-certs"], certfile=self.mqtt_tls_conf["certfile"], keyfile=self.mqtt_tls_conf["keyfile"], tls_version=ssl$
+            if self.mqtt_tls_conf["insecure-tls"] is not None:
+                self.mqtt_client.tls_insecure_set(self.mqtt_tls_conf["insecure-tls"])
+
         self.mqtt_client.connect(self.mqtt_conf["broker"], int(self.mqtt_conf["port"]))
 
     def mqtt_disconnect(self):
@@ -116,6 +126,7 @@ class AirthingsWave_mqtt:
             payload = "{0}".format(readings[s.name])
             print("{0} / {1}".format(topic, payload))
             msg_info = self.mqtt_client.publish(topic, payload, retain=False)
-            msg_info.wait_for_publish()
+            if msg_info.is_published() == False:
+                msg_info.wait_for_publish()
             # Mosquitto doesn't seem to get messages published back to back
             time.sleep(0.1)
