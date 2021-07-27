@@ -3,6 +3,11 @@ mqtt:
     port: 1883
     username:
     password:
+        tls:
+            ca-certs: 
+            certfile:
+            keyfile:
+            insecure-tls:
 
 waves:
   - name: "basement-radon"

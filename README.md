@@ -21,8 +21,8 @@ Class instantiation requires a path to a config file in YAML format.
 mqtt:
   broker: 192.168.30.18
   port: 1883
-  username: 
-  password: 
+  username:
+  password:
 
 waves:
   - name: "basement-radon"
@@ -73,14 +73,14 @@ The instructions below are for Raspbian on a Raspberry Pi Zero W (but could be m
 2. Follow the instructions at Airthings ( https://airthings.com/raspberry-pi/ ) to be able to "find" & "read" your Airthings Wave with your RPi Zero W.  Make sure you can "find" and then "read" your Airthings Wave.  Keep the MAC address you use to "read", you'll need it later.
 
 3. Install airthingswave-mqtt on the RPi Zero W
-   
+
    ```
    pip install airthingswave-mqtt
    pip install pyyaml
    ```
 
 4. Create a yaml configuration file for airthingswave-mqtt on the RPi Zero W, we'll call it airthingsconfig.yaml
-   
+
    ```shell
    nano /home/pi/airthingsconfig.yaml
    ```
@@ -109,7 +109,7 @@ waves:
 **Addr:** This is the MAC recorded earlier. It shouldn't matter, but recommend keeping the letters lowercase. Again, keep the quotes!
 
 5. Try running it with the command
-   
+
    ```shell
     python -m airthingswave-mqtt /home/pi/airthingsconfig.yaml
    ```
@@ -165,3 +165,28 @@ logger:
 10. Issue the command in Step 5 on your RPi Zero W, if all is working you should see HA listening on the MQTT instances you created and successful reports coming in from your RPi Zero W
 
 11. Once everything is working, set the Step 5 command as a cron job and remove the logging function from HA in Step 7
+
+12. If you want to utilize an encrypted MQTT connection to the server (MQTT over SSL), you can optionally include a sub-section to the `mqtt:` configuration block to set the additional parameters necessary for encrypting MQTT traffic using TLS:
+
+```
+mqtt:
+  broker: xxx.xxx.xxx.xxx
+  port: 1883
+  username: "YOURMQTTUSERNAME"
+  password: "YOURMQTTPASSWORD"
+  tls:
+    ca-certs: "/path/to/ca-certs.crt"
+    certfile: "/path/to/client-certificate.pem"
+    keyfile: "/path/to/client-keyfile.pem"
+    insecure-tls: false|true
+
+waves:
+  - name: "radon"
+    addr: "cc:78:ab:00:00:00"
+```
+
+**Notes:**
+
+**The default port for MQTT over SSL/TLS is 8883** rather than 1883
+
+**TLS-related files and options (ca-certs, certfile, keyfile, insecure-tls)** are defined as per the Eclipse paho MQTT [Python Client documentation (see `tls_set` and `tls_insecure_set`)](https://www.eclipse.org/paho/index.php?page=clients/python/docs/index.php#option-functions). Note also that for use of "insecure" TLS (omitting use of client certificate verification by the MQTT server, which is not really recommended), in addition to setting `insecure-tls: true`, you still need to populate the `ca-certs` path or TLS encryption will not be used by the client.
